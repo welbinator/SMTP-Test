@@ -100,7 +100,6 @@ class SMTP_Test_Plugin {
                             <input type="password" name="smtp_test_app_password" value="" placeholder="Only needed for parent site" />
                             <?php if ( $has_password ) : ?>
                                 <p><em>🔒 A password is saved. Leave blank to keep it.</em></p>
-                                <p><strong>Decrypted (debug):</strong> <code><?php echo esc_html( $decrypted_password ); ?></code></p>
                             <?php endif; ?>
                         </td>
                     </tr>
@@ -112,20 +111,30 @@ class SMTP_Test_Plugin {
                         </td>
                     </tr>
                     <?php endif; ?>
-                </table>
-                <?php submit_button(); ?>
-            </form>
-
-            <?php if ( get_option('smtp_test_site_type') === 'child' ) : 
+                    <tr>
+                        
+                    <?php if ( get_option('smtp_test_site_type') === 'child' ) : 
                 $site_name = sanitize_title( get_bloginfo( 'name' ) ); ?>
-                <h2>📌 Your Site Token</h2>
-                <p><code><?php echo esc_html( $site_name ); ?></code></p>
-
+                <th>Your Site Token</th>
+                <td><code><?php echo esc_html( $site_name ); ?></code></td>
+                    </tr>
+                    <tr>
+                        <th> Send Test Email</th>
+                        <td>
                 <form method="post" action="<?php echo esc_url( admin_url('admin-post.php') ); ?>">
                     <input type="hidden" name="action" value="send_test_email">
                     <?php submit_button('Send Test Email Now'); ?>
                 </form>
+                    </td>
+                    </tr>
             <?php endif; ?>
+                    
+                    </tr>
+                </table>
+                <?php submit_button(); ?>
+            </form>
+
+            
         </div>
         <?php
     }
