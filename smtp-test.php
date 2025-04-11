@@ -87,7 +87,15 @@ class SMTP_Test_Plugin {
                     <?php if ( get_option('smtp_test_site_type') === 'parent' ) : ?>
                     <tr valign="top">
                         <th scope="row">Gmail App Password</th>
-                        <td><input type="password" name="smtp_test_app_password" value="" placeholder="Only needed for parent site" /></td>
+                        <td><?php 
+                            $encrypted = get_option('smtp_test_app_password');
+                            $has_password = ! empty( $encrypted );
+                            ?>
+                            <input type="password" name="smtp_test_app_password" value="" placeholder="Only needed for parent site" />
+                            <?php if ( $has_password ) : ?>
+                                <p><em>🔒 A password is saved. Leave blank to keep it.</em></p>
+                            <?php endif; ?>
+                        </td>
                     </tr>
                     <?php endif; ?>
                 </table>
