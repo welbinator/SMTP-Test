@@ -41,6 +41,7 @@ class SMTP_Test_Plugin {
         register_setting( 'smtp_test_settings', 'smtp_test_app_password', [
             'sanitize_callback' => [ $this, 'encrypt_password' ]
         ] );
+        register_setting( 'smtp_test_settings', 'smtp_test_child_sites' );
     }
 
     public function encrypt_password( $password ) {
@@ -97,12 +98,23 @@ class SMTP_Test_Plugin {
                             <?php endif; ?>
                         </td>
                     </tr>
+                    <tr valign="top">
+                        <th scope="row">Child Site Tokens</th>
+                        <td>
+                            <textarea name="smtp_test_child_sites" rows="5" cols="40" placeholder="One token per line (e.g. roadmapwp, west-side-sewing)"><?php echo esc_textarea( get_option('smtp_test_child_sites') ); ?></textarea>
+                            <p class="description">Enter one token per line. Tokens should match the slugified site name from the child site.</p>
+                        </td>
+                    </tr>
                     <?php endif; ?>
                 </table>
                 <?php submit_button(); ?>
             </form>
 
-            <?php if ( get_option('smtp_test_site_type') === 'child' ) : ?>
+            <?php if ( get_option('smtp_test_site_type') === 'child' ) : 
+                $site_name = sanitize_title( get_bloginfo( 'name' ) ); ?>
+                <h2>📌 Your Site Token</h2>
+                <p><code><?php echo esc_html( $site_name ); ?></code></p>
+
                 <form method="post" action="<?php echo esc_url( admin_url('admin-post.php') ); ?>">
                     <input type="hidden" name="action" value="send_test_email">
                     <?php submit_button('Send Test Email Now'); ?>
@@ -133,8 +145,9 @@ class SMTP_Test_Plugin {
         $username = get_option( 'smtp_test_email_to' );
         $password = $this->decrypt_password( get_option( 'smtp_test_app_password' ) );
 
-        $expected_token = sanitize_title( get_bloginfo( 'name' ) ) . '-' . strtolower( date( 'F-j' ) );
-        $token_found = false;
+        $child_sites_raw = get_option( 'smtp_test_child_sites' );
+        $child_sites = array_filter( array_map( 'trim', explode( "\n", $child_sites_raw ) ) );
+
         $output = '';
 
         $inbox = @imap_open( $mailbox, $username, $password );
@@ -143,29 +156,37 @@ class SMTP_Test_Plugin {
         }
 
         $emails = imap_search( $inbox, 'SINCE "' . date( 'd-M-Y', strtotime('-7 days') ) . '"' );
-        if ( ! $emails ) {
-            $output .= '<p>📭 No emails found in the past 7 days.</p>';
-        } else {
+        $all_messages = [];
+
+        if ( $emails ) {
             rsort( $emails );
             foreach ( $emails as $email_number ) {
                 $overview = imap_fetch_overview( $inbox, $email_number, 0 );
                 $subject = isset( $overview[0]->subject ) ? $overview[0]->subject : '';
                 $body = imap_fetchbody( $inbox, $email_number, 1 );
-
-                if ( stripos( $subject, $expected_token ) !== false || stripos( $body, $expected_token ) !== false ) {
-                    $token_found = true;
-                    break;
-                }
+                $all_messages[] = $subject . ' ' . $body;
             }
         }
 
         imap_close( $inbox );
 
-        if ( $token_found ) {
-            $output .= '<p style="color:green;">✅ Token FOUND: ' . esc_html( $expected_token ) . '</p>';
-        } else {
-            $output .= '<p style="color:red;">❌ Token NOT FOUND: ' . esc_html( $expected_token ) . '</p>';
+        $output .= '<h2>📬 Token Check Results</h2><ul>';
+
+        foreach ( $child_sites as $token_base ) {
+            $expected_token = $token_base . '-' . strtolower( date( 'F-j' ) );
+            $found = false;
+
+            foreach ( $all_messages as $content ) {
+                if ( stripos( $content, $expected_token ) !== false ) {
+                    $found = true;
+                    break;
+                }
+            }
+
+            $output .= '<li>' . esc_html( $token_base ) . ': ' . ( $found ? '<span style="color:green;">✅ Found</span>' : '<span style="color:red;">❌ Not Found</span>' ) . '</li>';
         }
+
+        $output .= '</ul>';
 
         return $output;
     }
