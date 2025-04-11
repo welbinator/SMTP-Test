@@ -2,11 +2,10 @@
 /**
  * Plugin Name: SMTP Test
  * Description: Sends weekly test emails from child sites to a parent site and verifies delivery.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: James Welbes
  */
 
-// Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 class SMTP_Test_Plugin {
@@ -17,9 +16,12 @@ class SMTP_Test_Plugin {
         add_action( 'admin_init', [ $this, 'maybe_send_manual_test_email' ] );
 
         if ( get_option( 'smtp_test_site_type' ) === 'child' ) {
-            add_action( 'smtp_test_weekly_cron', [ $this, 'send_test_email' ] );
-            if ( ! wp_next_scheduled( 'smtp_test_weekly_cron' ) ) {
-                wp_schedule_event( strtotime( 'next friday 6am' ), 'weekly', 'smtp_test_weekly_cron' );
+            add_action( 'smtp_test_daily_check', [ $this, 'maybe_send_weekly_email' ] );
+
+            // Schedule daily check at 00:01 if not already scheduled
+            if ( ! wp_next_scheduled( 'smtp_test_daily_check' ) ) {
+                $midnight_plus_one = mktime( 0, 1, 0 );
+                wp_schedule_event( $midnight_plus_one, 'daily', 'smtp_test_daily_check' );
             }
         }
 
@@ -35,6 +37,9 @@ class SMTP_Test_Plugin {
     public function register_settings() {
         register_setting( 'smtp_test_settings', 'smtp_test_site_type' );
         register_setting( 'smtp_test_settings', 'smtp_test_email_to' );
+        register_setting( 'smtp_test_settings', 'smtp_test_day', [
+            'default' => 'Friday'
+        ] );
         register_setting( 'smtp_test_settings', 'smtp_test_app_password', [
             'sanitize_callback' => [ $this, 'encrypt_password' ]
         ] );
@@ -57,6 +62,7 @@ class SMTP_Test_Plugin {
     public function settings_page() {
         $site_type = get_option('smtp_test_site_type');
         $site_name = sanitize_title( get_bloginfo( 'name' ) );
+        $days = [ 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday' ];
         ?>
         <div class="wrap">
             <h1>SMTP Test Settings</h1>
@@ -88,6 +94,17 @@ class SMTP_Test_Plugin {
                     <tr valign="top">
                         <th scope="row">Send Test Emails To</th>
                         <td><input type="email" name="smtp_test_email_to" value="<?php echo esc_attr( get_option('smtp_test_email_to') ); ?>" /></td>
+                    </tr>
+                    <tr valign="top">
+                        <th scope="row">Test Day</th>
+                        <td>
+                            <select name="smtp_test_day">
+                                <?php foreach ( $days as $day ) : ?>
+                                    <option value="<?php echo esc_attr( $day ); ?>" <?php selected( get_option('smtp_test_day', 'Friday'), $day ); ?>><?php echo esc_html( $day ); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <p class="description">Test emails are only sent if today matches the selected day.</p>
+                        </td>
                     </tr>
 
                     <?php if ( $site_type === 'parent' ) : ?>
@@ -122,6 +139,14 @@ class SMTP_Test_Plugin {
                             </td>
                         </tr>
                     <?php endif; ?>
+                    <tr valign="top">
+                        <th scope="row">Current Server Time</th>
+                        <td><?php echo esc_html( date_i18n( 'l, F j, Y – g:i A' ) ); ?></td>
+                    </tr>
+                    <tr valign="top">
+                        <th scope="row">Cron Note</th>
+                        <td><p>⏱️ WordPress cron only runs when someone visits your site. For low-traffic sites, the test email may be delayed until a visit triggers the cron.</p></td>
+                    </tr>
                 </table>
 
                 <?php submit_button(); ?>
@@ -137,6 +162,19 @@ class SMTP_Test_Plugin {
         }
     }
 
+    public function maybe_send_weekly_email() {
+        $today = current_time( 'l' );
+        $target_day = get_option( 'smtp_test_day', 'Friday' );
+
+        if ( $today !== $target_day ) return;
+
+        $already_sent = get_transient( 'smtp_test_email_sent_' . date( 'Y-m-d' ) );
+        if ( $already_sent ) return;
+
+        $this->send_test_email();
+        set_transient( 'smtp_test_email_sent_' . date( 'Y-m-d' ), true, DAY_IN_SECONDS );
+    }
+
     public function send_test_email() {
         $site_name = sanitize_title( get_bloginfo( 'name' ) );
         $date = strtolower( date( 'F-j' ) );
@@ -148,6 +186,8 @@ class SMTP_Test_Plugin {
         $headers = [ 'Content-Type: text/plain; charset=UTF-8' ];
 
         $sent = wp_mail( $to, $subject, $body, $headers );
+
+        if ( defined('DOING_CRON') && DOING_CRON ) return; // don't redirect during cron
 
         wp_redirect( admin_url( 'options-general.php?page=smtp-test&email_sent=' . ($sent ? '1' : '0') ) );
         exit;
