@@ -2,7 +2,7 @@
 /**
  * Plugin Name: SMTP Test
  * Description: Sends weekly test emails from child sites to a parent site and verifies delivery.
- * Version: 1.1.0
+ * Version: 1.1.1
  * Author: James Welbes
  */
 
@@ -153,24 +153,43 @@ class SMTP_Test_Plugin {
     }
 
     public function maybe_send_manual_test_email() {
-        if ( isset($_POST['smtp_test_send_manual']) ) {
+        if (
+            isset( $_POST['smtp_test_send_manual'] ) &&
+            check_admin_referer( 'smtp_test_settings-options' )
+        ) {
             $this->send_test_email();
             exit;
         }
     }
+    
 
     public function maybe_send_weekly_email() {
+        // Only run from cron
+        if ( ! defined( 'DOING_CRON' ) || ! DOING_CRON ) {
+            return;
+        }
+    
+        // Get current day in WordPress timezone
         $today = current_time( 'l' );
         $target_day = get_option( 'smtp_test_day', 'Friday' );
-
-        if ( $today !== $target_day ) return;
-
-        $already_sent = get_transient( 'smtp_test_email_sent_' . date( 'Y-m-d' ) );
-        if ( $already_sent ) return;
-
+    
+        if ( $today !== $target_day ) {
+            return;
+        }
+    
+        $transient_key = 'smtp_test_email_sent_' . date( 'Y-m-d' );
+    
+        // Prevent duplicate sends
+        if ( get_transient( $transient_key ) ) {
+            return;
+        }
+    
         $this->send_test_email();
-        set_transient( 'smtp_test_email_sent_' . date( 'Y-m-d' ), true, DAY_IN_SECONDS );
+    
+        // Set transient to mark that we've already sent it today
+        set_transient( $transient_key, true, DAY_IN_SECONDS );
     }
+    
 
     public function send_test_email() {
         $site_name = sanitize_title( get_bloginfo( 'name' ) );
@@ -192,7 +211,7 @@ class SMTP_Test_Plugin {
 
     public function check_email_token() {
         $mailbox = '{imap.gmail.com:993/imap/ssl}INBOX';
-        $username = get_option( 'smtp_test_email_to' );
+        $username = sanitize_email( get_option( 'smtp_test_email_to' ) );
         $password = $this->decrypt_password( get_option( 'smtp_test_app_password' ) );
 
         $child_sites_raw = get_option( 'smtp_test_child_sites' );
