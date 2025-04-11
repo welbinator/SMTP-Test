@@ -42,12 +42,14 @@ class SMTP_Test_Plugin {
     }
 
     public function encrypt_password( $password ) {
-        $key = wp_auth_key();
+        $key = AUTH_KEY; // ✅ Correct: this is a constant defined by WordPress
+
         return base64_encode( openssl_encrypt( $password, 'aes-256-cbc', $key, 0, substr( hash( 'sha256', $key ), 0, 16 ) ) );
     }
 
     public function decrypt_password( $encrypted ) {
-        $key = wp_auth_key();
+        $key = AUTH_KEY; // ✅ Correct: this is a constant defined by WordPress
+
         return openssl_decrypt( base64_decode( $encrypted ), 'aes-256-cbc', $key, 0, substr( hash( 'sha256', $key ), 0, 16 ) );
     }
 
