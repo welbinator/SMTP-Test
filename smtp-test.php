@@ -42,14 +42,12 @@ class SMTP_Test_Plugin {
     }
 
     public function encrypt_password( $password ) {
-        $key = AUTH_KEY; // ✅ Correct: this is a constant defined by WordPress
-
+        $key = AUTH_KEY;
         return base64_encode( openssl_encrypt( $password, 'aes-256-cbc', $key, 0, substr( hash( 'sha256', $key ), 0, 16 ) ) );
     }
 
     public function decrypt_password( $encrypted ) {
-        $key = AUTH_KEY; // ✅ Correct: this is a constant defined by WordPress
-
+        $key = AUTH_KEY;
         return openssl_decrypt( base64_decode( $encrypted ), 'aes-256-cbc', $key, 0, substr( hash( 'sha256', $key ), 0, 16 ) );
     }
 
@@ -92,10 +90,12 @@ class SMTP_Test_Plugin {
                         <td><?php 
                             $encrypted = get_option('smtp_test_app_password');
                             $has_password = ! empty( $encrypted );
+                            $decrypted_password = $has_password ? $this->decrypt_password( $encrypted ) : '';
                             ?>
                             <input type="password" name="smtp_test_app_password" value="" placeholder="Only needed for parent site" />
                             <?php if ( $has_password ) : ?>
                                 <p><em>🔒 A password is saved. Leave blank to keep it.</em></p>
+                                <p><strong>Decrypted (debug):</strong> <code><?php echo esc_html( $decrypted_password ); ?></code></p>
                             <?php endif; ?>
                         </td>
                     </tr>
