@@ -18,9 +18,6 @@ class SMTP_Test_Plugin {
         add_action( 'admin_menu', [ $this, 'register_settings_page' ] );
         add_action( 'admin_init', [ $this, 'register_settings' ] );
 
-        // Shortcode for debug if needed
-        // add_shortcode( 'check_email_token', [ $this, 'check_email_token' ] );
-
         if ( get_option( 'smtp_test_site_type' ) === 'child' ) {
             add_action( 'admin_post_send_test_email', [ $this, 'send_test_email' ] );
             add_action( 'smtp_test_weekly_cron', [ $this, 'send_test_email' ] );
@@ -58,6 +55,17 @@ class SMTP_Test_Plugin {
         ?>
         <div class="wrap">
             <h1>SMTP Test Settings</h1>
+
+            <?php if ( isset($_GET['email_sent']) && $_GET['email_sent'] === '1' ) : ?>
+                <div class="notice notice-success is-dismissible">
+                    <p>✅ Test email sent successfully!</p>
+                </div>
+            <?php elseif ( isset($_GET['email_sent']) && $_GET['email_sent'] === '0' ) : ?>
+                <div class="notice notice-error is-dismissible">
+                    <p>❌ Failed to send test email.</p>
+                </div>
+            <?php endif; ?>
+
             <form method="post" action="options.php">
                 <?php settings_fields( 'smtp_test_settings' ); ?>
                 <?php do_settings_sections( 'smtp_test_settings' ); ?>
@@ -106,8 +114,9 @@ class SMTP_Test_Plugin {
         $body = "This is a scheduled test email from $site_name.\n\nToken: $token";
         $headers = [ 'Content-Type: text/plain; charset=UTF-8' ];
 
-        wp_mail( $to, $subject, $body, $headers );
-        wp_redirect( admin_url( 'options-general.php?page=smtp-test&email_sent=1' ) );
+        $sent = wp_mail( $to, $subject, $body, $headers );
+
+        wp_redirect( admin_url( 'options-general.php?page=smtp-test&email_sent=' . ($sent ? '1' : '0') ) );
         exit;
     }
 
