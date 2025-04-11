@@ -19,7 +19,7 @@ class SMTP_Test_Plugin {
         if ( get_option( 'smtp_test_site_type' ) === 'child' ) {
             add_action( 'smtp_test_weekly_cron', [ $this, 'send_test_email' ] );
             if ( ! wp_next_scheduled( 'smtp_test_weekly_cron' ) ) {
-                wp_schedule_event( strtotime( 'next friday 6am' ), 'weekly', 'smtp_test_weekly_cron' );
+                wp_schedule_event( strtotime( 'friday 7:30pm' ), 'weekly', 'smtp_test_weekly_cron' );
             }
         }
 
@@ -122,6 +122,13 @@ class SMTP_Test_Plugin {
                             </td>
                         </tr>
                     <?php endif; ?>
+                    <tr valign="top">
+                        <th scope="row">Current Server Time</th>
+                        <td>
+                            <?php echo esc_html( date_i18n( 'l, F j, Y – g:i A' ) ); ?>
+                        </td>
+                    </tr>
+
                 </table>
 
                 <?php submit_button(); ?>
