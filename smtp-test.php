@@ -139,10 +139,7 @@ class SMTP_Test_Plugin {
                             </td>
                         </tr>
                     <?php endif; ?>
-                    <tr valign="top">
-                        <th scope="row">Current Server Time</th>
-                        <td><?php echo esc_html( date_i18n( 'l, F j, Y – g:i A' ) ); ?></td>
-                    </tr>
+                    
                     <tr valign="top">
                         <th scope="row">Cron Note</th>
                         <td><p>⏱️ WordPress cron only runs when someone visits your site. For low-traffic sites, the test email may be delayed until a visit triggers the cron.</p></td>
