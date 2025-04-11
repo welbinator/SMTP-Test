@@ -42,6 +42,11 @@ class SMTP_Test_Plugin {
     }
 
     public function encrypt_password( $password ) {
+        // If field is empty, return the previously saved value (do not overwrite)
+        if ( empty( $password ) ) {
+            return get_option( 'smtp_test_app_password' );
+        }
+    
         $key = AUTH_KEY;
         return base64_encode( openssl_encrypt( $password, 'aes-256-cbc', $key, 0, substr( hash( 'sha256', $key ), 0, 16 ) ) );
     }
