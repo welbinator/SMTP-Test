@@ -57,10 +57,12 @@ class SMTP_Test_Plugin {
     }
 
     public function settings_page() {
+        $site_type = get_option('smtp_test_site_type');
+        $site_name = sanitize_title( get_bloginfo( 'name' ) );
         ?>
         <div class="wrap">
             <h1>SMTP Test Settings</h1>
-
+    
             <?php if ( isset($_GET['email_sent']) && $_GET['email_sent'] === '1' ) : ?>
                 <div class="notice notice-success is-dismissible">
                     <p>✅ Test email sent successfully!</p>
@@ -70,18 +72,18 @@ class SMTP_Test_Plugin {
                     <p>❌ Failed to send test email.</p>
                 </div>
             <?php endif; ?>
-
-            <form method="post" action="options.php">
+    
+            <form method="post" action="">
                 <?php settings_fields( 'smtp_test_settings' ); ?>
                 <?php do_settings_sections( 'smtp_test_settings' ); ?>
-
+    
                 <table class="form-table">
                     <tr valign="top">
                         <th scope="row">Site Type</th>
                         <td>
                             <select name="smtp_test_site_type">
-                                <option value="child" <?php selected( get_option('smtp_test_site_type'), 'child' ); ?>>Child Site</option>
-                                <option value="parent" <?php selected( get_option('smtp_test_site_type'), 'parent' ); ?>>Parent Site</option>
+                                <option value="child" <?php selected( $site_type, 'child' ); ?>>Child Site</option>
+                                <option value="parent" <?php selected( $site_type, 'parent' ); ?>>Parent Site</option>
                             </select>
                         </td>
                     </tr>
@@ -89,55 +91,50 @@ class SMTP_Test_Plugin {
                         <th scope="row">Send Test Emails To</th>
                         <td><input type="email" name="smtp_test_email_to" value="<?php echo esc_attr( get_option('smtp_test_email_to') ); ?>" /></td>
                     </tr>
-                    <?php if ( get_option('smtp_test_site_type') === 'parent' ) : ?>
-                    <tr valign="top">
-                        <th scope="row">Gmail App Password</th>
-                        <td><?php 
-                            $encrypted = get_option('smtp_test_app_password');
-                            $has_password = ! empty( $encrypted );
-                            $decrypted_password = $has_password ? $this->decrypt_password( $encrypted ) : '';
-                            ?>
-                            <input type="password" name="smtp_test_app_password" value="" placeholder="Only needed for parent site" />
-                            <?php if ( $has_password ) : ?>
-                                <p><em>🔒 A password is saved. Leave blank to keep it.</em></p>
-                            <?php endif; ?>
-                        </td>
-                    </tr>
-                    <tr valign="top">
-                        <th scope="row">Child Site Tokens</th>
-                        <td>
-                            <textarea name="smtp_test_child_sites" rows="5" cols="40" placeholder="One token per line (e.g. roadmapwp, west-side-sewing)"><?php echo esc_textarea( get_option('smtp_test_child_sites') ); ?></textarea>
-                            <p class="description">Enter one token per line. Tokens should match the slugified site name from the child site.</p>
-                        </td>
-                    </tr>
+    
+                    <?php if ( $site_type === 'parent' ) : ?>
+                        <tr valign="top">
+                            <th scope="row">Gmail App Password</th>
+                            <td>
+                                <?php 
+                                $encrypted = get_option('smtp_test_app_password');
+                                $has_password = ! empty( $encrypted );
+                                ?>
+                                <input type="password" name="smtp_test_app_password" value="" placeholder="Only needed for parent site" />
+                                <?php if ( $has_password ) : ?>
+                                    <p><em>🔒 A password is saved. Leave blank to keep it.</em></p>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <tr valign="top">
+                            <th scope="row">Child Site Tokens</th>
+                            <td>
+                                <textarea name="smtp_test_child_sites" rows="5" cols="40" placeholder="One token per line (e.g. roadmapwp, west-side-sewing)"><?php echo esc_textarea( get_option('smtp_test_child_sites') ); ?></textarea>
+                                <p class="description">Enter one token per line. Tokens should match the slugified site name from the child site.</p>
+                            </td>
+                        </tr>
                     <?php endif; ?>
-                    <tr>
-                        
-                    <?php if ( get_option('smtp_test_site_type') === 'child' ) : 
-                $site_name = sanitize_title( get_bloginfo( 'name' ) ); ?>
-                <th>Your Site Token</th>
-                <td><code><?php echo esc_html( $site_name ); ?></code></td>
-                    </tr>
-                    <tr>
-                        <th> Send Test Email</th>
-                        <td>
-                <form method="post" action="<?php echo esc_url( admin_url('admin-post.php') ); ?>">
-                    <input type="hidden" name="action" value="send_test_email">
-                    <?php submit_button('Send Test Email Now'); ?>
-                </form>
-                    </td>
-                    </tr>
-            <?php endif; ?>
-                    
-                    </tr>
+    
+                    <?php if ( $site_type === 'child' ) : ?>
+                        <tr valign="top">
+                            <th scope="row">Your Site Token</th>
+                            <td><code><?php echo esc_html( $site_name ); ?></code></td>
+                        </tr>
+                        <tr valign="top">
+                            <th scope="row">Send Test Email</th>
+                            <td>
+                                <?php submit_button('Send Test Email Now', 'secondary', 'smtp_test_send_manual', false); ?>
+                            </td>
+                        </tr>
+                    <?php endif; ?>
                 </table>
+    
                 <?php submit_button(); ?>
             </form>
-
-            
         </div>
         <?php
     }
+    
 
     public function send_test_email() {
         $site_name = sanitize_title( get_bloginfo( 'name' ) );
