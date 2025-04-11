@@ -9,9 +9,6 @@
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-// Define encryption key constant (you should add this to wp-config.php instead)
-define( 'SMTP_TEST_ENCRYPTION_KEY', 'your-super-secret-key' );
-
 class SMTP_Test_Plugin {
 
     public function __construct() {
@@ -45,11 +42,13 @@ class SMTP_Test_Plugin {
     }
 
     public function encrypt_password( $password ) {
-        return openssl_encrypt( $password, 'aes-256-cbc', SMTP_TEST_ENCRYPTION_KEY );
+        $key = wp_auth_key();
+        return base64_encode( openssl_encrypt( $password, 'aes-256-cbc', $key, 0, substr( hash( 'sha256', $key ), 0, 16 ) ) );
     }
 
     public function decrypt_password( $encrypted ) {
-        return openssl_decrypt( $encrypted, 'aes-256-cbc', SMTP_TEST_ENCRYPTION_KEY );
+        $key = wp_auth_key();
+        return openssl_decrypt( base64_decode( $encrypted ), 'aes-256-cbc', $key, 0, substr( hash( 'sha256', $key ), 0, 16 ) );
     }
 
     public function settings_page() {
