@@ -1,0 +1,47 @@
+name: Create Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release Tag'
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout code from the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Create temporary directory for packaging
+      - name: Create temporary directory
+        run: mkdir temp_dir
+
+      # Copy specified files to the temporary directory
+      - name: Copy necessary files to the temporary directory
+        run: |
+          cp smtp-test.php temp_dir/
+          
+
+      # Rename directory to the desired folder name
+      - name: Rename directory
+        run: mv temp_dir smtp-test
+
+      # Zip the packaged files
+      - name: Create zip archive
+        run: |
+          zip -r smtp-test-${{ github.event.inputs.tag }}.zip smtp-test
+
+      # Create a new GitHub release with the packaged zip
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: smtp-test-${{ github.event.inputs.tag }}.zip
+          tag_name: ${{ github.event.inputs.tag }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+permissions:
+  contents: write
