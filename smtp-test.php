@@ -71,7 +71,7 @@ class SMTP_Test_Plugin {
                 </div>
             <?php endif; ?>
 
-            <form method="post" action="">
+            <form method="post" action="options.php">
                 <?php settings_fields( 'smtp_test_settings' ); ?>
                 <?php do_settings_sections( 'smtp_test_settings' ); ?>
 
