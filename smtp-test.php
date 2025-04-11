@@ -14,9 +14,9 @@ class SMTP_Test_Plugin {
     public function __construct() {
         add_action( 'admin_menu', [ $this, 'register_settings_page' ] );
         add_action( 'admin_init', [ $this, 'register_settings' ] );
+        add_action( 'admin_init', [ $this, 'maybe_send_manual_test_email' ] );
 
         if ( get_option( 'smtp_test_site_type' ) === 'child' ) {
-            add_action( 'admin_post_send_test_email', [ $this, 'send_test_email' ] );
             add_action( 'smtp_test_weekly_cron', [ $this, 'send_test_email' ] );
             if ( ! wp_next_scheduled( 'smtp_test_weekly_cron' ) ) {
                 wp_schedule_event( strtotime( 'next friday 6am' ), 'weekly', 'smtp_test_weekly_cron' );
@@ -42,11 +42,9 @@ class SMTP_Test_Plugin {
     }
 
     public function encrypt_password( $password ) {
-        // If field is empty, return the previously saved value (do not overwrite)
         if ( empty( $password ) ) {
             return get_option( 'smtp_test_app_password' );
         }
-    
         $key = AUTH_KEY;
         return base64_encode( openssl_encrypt( $password, 'aes-256-cbc', $key, 0, substr( hash( 'sha256', $key ), 0, 16 ) ) );
     }
@@ -62,7 +60,7 @@ class SMTP_Test_Plugin {
         ?>
         <div class="wrap">
             <h1>SMTP Test Settings</h1>
-    
+
             <?php if ( isset($_GET['email_sent']) && $_GET['email_sent'] === '1' ) : ?>
                 <div class="notice notice-success is-dismissible">
                     <p>✅ Test email sent successfully!</p>
@@ -72,11 +70,11 @@ class SMTP_Test_Plugin {
                     <p>❌ Failed to send test email.</p>
                 </div>
             <?php endif; ?>
-    
+
             <form method="post" action="">
                 <?php settings_fields( 'smtp_test_settings' ); ?>
                 <?php do_settings_sections( 'smtp_test_settings' ); ?>
-    
+
                 <table class="form-table">
                     <tr valign="top">
                         <th scope="row">Site Type</th>
@@ -91,15 +89,12 @@ class SMTP_Test_Plugin {
                         <th scope="row">Send Test Emails To</th>
                         <td><input type="email" name="smtp_test_email_to" value="<?php echo esc_attr( get_option('smtp_test_email_to') ); ?>" /></td>
                     </tr>
-    
+
                     <?php if ( $site_type === 'parent' ) : ?>
                         <tr valign="top">
                             <th scope="row">Gmail App Password</th>
                             <td>
-                                <?php 
-                                $encrypted = get_option('smtp_test_app_password');
-                                $has_password = ! empty( $encrypted );
-                                ?>
+                                <?php $encrypted = get_option('smtp_test_app_password'); $has_password = ! empty( $encrypted ); ?>
                                 <input type="password" name="smtp_test_app_password" value="" placeholder="Only needed for parent site" />
                                 <?php if ( $has_password ) : ?>
                                     <p><em>🔒 A password is saved. Leave blank to keep it.</em></p>
@@ -114,7 +109,7 @@ class SMTP_Test_Plugin {
                             </td>
                         </tr>
                     <?php endif; ?>
-    
+
                     <?php if ( $site_type === 'child' ) : ?>
                         <tr valign="top">
                             <th scope="row">Your Site Token</th>
@@ -128,13 +123,19 @@ class SMTP_Test_Plugin {
                         </tr>
                     <?php endif; ?>
                 </table>
-    
+
                 <?php submit_button(); ?>
             </form>
         </div>
         <?php
     }
-    
+
+    public function maybe_send_manual_test_email() {
+        if ( isset($_POST['smtp_test_send_manual']) ) {
+            $this->send_test_email();
+            exit;
+        }
+    }
 
     public function send_test_email() {
         $site_name = sanitize_title( get_bloginfo( 'name' ) );
