@@ -16,17 +16,17 @@ class SMTP_Test_Plugin {
         add_action( 'admin_init', [ $this, 'maybe_send_manual_test_email' ] );
 
         if ( get_option( 'smtp_test_site_type' ) === 'child' ) {
-            add_action( 'smtp_test_daily_check', [ $this, 'maybe_send_weekly_email' ] );
+            add_action( 'smtp_test_daily_cron', [ $this, 'maybe_send_weekly_email' ] );
 
             // Schedule daily check at 00:01 if not already scheduled
-            if ( ! wp_next_scheduled( 'smtp_test_daily_check' ) ) {
+            if ( ! wp_next_scheduled( 'smtp_test_daily_cron' ) ) {
                 $now = current_time( 'timestamp' ); // WP timezone
                 $tomorrow = strtotime( 'tomorrow', $now );
             
                 // 12:01 AM tomorrow
                 $timestamp = mktime( 0, 1, 0, date( 'n', $tomorrow ), date( 'j', $tomorrow ), date( 'Y', $tomorrow ) );
             
-                wp_schedule_event( $timestamp, 'daily', 'smtp_test_daily_check' );
+                wp_schedule_event( $timestamp, 'daily', 'smtp_test_daily_cron' );
             }
         }
 
