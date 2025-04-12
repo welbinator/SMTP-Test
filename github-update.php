@@ -44,10 +44,10 @@ function my_plugin_check_for_updates($transient) {
 
     return $transient;
 }
-add_filter('pre_set_site_transient_update_plugins', __NAMESPACE__ . '\\my_plugin_check_for_updates');
+add_filter('pre_set_site_transient_update_plugins', 'my_plugin_check_for_updates');
 
 function github_plugin_updater_user_agent($args) {
     $args['user-agent'] = 'WordPress/' . get_bloginfo('version') . '; ' . home_url();
     return $args;
 }
-add_filter('http_request_args', __NAMESPACE__ . '\\github_plugin_updater_user_agent', 10, 1);
+add_filter('http_request_args', 'github_plugin_updater_user_agent', 10, 1);
