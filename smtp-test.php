@@ -21,7 +21,7 @@ class SMTP_Test_Plugin {
         add_action( 'admin_post_smtp_test_reset', [ $this, 'reset_plugin_data' ] );
 
         if ( get_option( 'smtp_test_site_type' ) === 'child' ) {
-            add_action( 'smtp_test_daily_cron', [ $this, 'maybe_send_weekly_email' ] );
+            add_action( 'smtp_test_daily_cron2', [ $this, 'maybe_send_weekly_email' ] );
 
             // Schedule daily check at 00:01 if not already scheduled
             if ( ! wp_next_scheduled( 'smtp_test_daily_cron2' ) ) {
