@@ -2,11 +2,18 @@
 /**
  * Plugin Name: SMTP Test
  * Description: Sends weekly test emails from child sites to a parent site and verifies delivery.
- * Version: 1.2.0
+ * Version: 1.2.2
  * Author: James Welbes
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
+
+// Define plugin constants.
+define('SMTP_TEST_VERSION', '1.2.2');
+define('SMTP_TEST_PATH', plugin_dir_path(__FILE__));
+define('SMTP_TEST_URL', plugin_dir_url(__FILE__));
+define('SMTP_TEST_MIN_WP_VERSION', '5.8');
+define('SMTP_TEST_MIN_PHP_VERSION', '7.4');
 
 class SMTP_Test_Plugin {
 
@@ -14,8 +21,6 @@ class SMTP_Test_Plugin {
         add_action( 'admin_menu', [ $this, 'register_settings_page' ] );
         add_action( 'admin_init', [ $this, 'register_settings' ] );
         add_action( 'admin_init', [ $this, 'maybe_send_manual_test_email' ] );
-
-
         add_action( 'admin_post_smtp_test_reset', [ $this, 'reset_plugin_data' ] );
 
         if ( get_option( 'smtp_test_site_type' ) === 'child' ) {
@@ -35,6 +40,7 @@ class SMTP_Test_Plugin {
         if ( get_option( 'smtp_test_site_type' ) === 'parent' ) {
             add_shortcode( 'check_email_token', [ $this, 'check_email_token' ] );
         }
+        
     }
 
     public function reset_plugin_data() {
@@ -315,4 +321,14 @@ class SMTP_Test_Plugin {
     }
 }
 
-new SMTP_Test_Plugin();
+function smtp_test_bootstrap() {
+    new SMTP_Test_Plugin();
+
+    if ( file_exists( SMTP_TEST_PATH . 'github-update.php' ) ) {
+        include_once SMTP_TEST_PATH . 'github-update.php';
+    } else {
+        error_log( 'github-update.php not found in ' . SMTP_TEST_PATH );
+    }
+}
+smtp_test_bootstrap();
+
