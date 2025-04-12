@@ -2,7 +2,7 @@
 /**
  * Plugin Name: SMTP Test
  * Description: Sends weekly test emails from child sites to a parent site and verifies delivery.
- * Version: 1.1.1
+ * Version: 1.2.0
  * Author: James Welbes
  */
 
