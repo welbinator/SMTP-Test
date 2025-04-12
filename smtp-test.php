@@ -28,7 +28,7 @@ class SMTP_Test_Plugin {
                 $now = current_time( 'timestamp' );
                 $tomorrow = strtotime( 'tomorrow', $now );
             
-                $timestamp = mktime( 0, 1, 0, date( 'n', $tomorrow ), date( 'j', $tomorrow ), date( 'Y', $tomorrow ) );
+                $timestamp = mktime( 0, 3, 0, date( 'n', $tomorrow ), date( 'j', $tomorrow ), date( 'Y', $tomorrow ) );
             
                 error_log( 'Scheduling at: ' . date( 'Y-m-d H:i:s', $timestamp ) ); // Debug
                 wp_schedule_event( $timestamp, 'daily', 'smtp_test_daily_cron2' );
