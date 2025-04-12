@@ -20,9 +20,13 @@ class SMTP_Test_Plugin {
 
             // Schedule daily check at 00:01 if not already scheduled
             if ( ! wp_next_scheduled( 'smtp_test_daily_check' ) ) {
-                $now = current_time( 'timestamp' ); // WordPress timezone
-                $midnight_plus_one = strtotime( '00:01:00', strtotime( date( 'Y-m-d', $now ) ) );
-                wp_schedule_event( $midnight_plus_one, 'daily', 'smtp_test_daily_check' );
+                $now = current_time( 'timestamp' ); // WP timezone
+                $tomorrow = strtotime( 'tomorrow', $now );
+            
+                // 12:01 AM tomorrow
+                $timestamp = mktime( 0, 1, 0, date( 'n', $tomorrow ), date( 'j', $tomorrow ), date( 'Y', $tomorrow ) );
+            
+                wp_schedule_event( $timestamp, 'daily', 'smtp_test_daily_check' );
             }
         }
 
