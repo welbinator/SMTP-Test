@@ -25,10 +25,10 @@ class SMTP_Test_Plugin {
 
             // Schedule daily check at 00:01 if not already scheduled
             if ( ! wp_next_scheduled( 'smtp_test_daily_cron2' ) ) {
-                $now = current_time( 'timestamp' );
-                $tomorrow = strtotime( 'tomorrow', $now );
-            
-                $timestamp = mktime( 0, 3, 0, date( 'n', $tomorrow ), date( 'j', $tomorrow ), date( 'Y', $tomorrow ) );
+                $timezone = wp_timezone(); // WordPress timezone (DateTimeZone object)
+                $datetime = new DateTime( 'tomorrow 00:03:00', $timezone );
+                $timestamp = $datetime->getTimestamp(); // This is in local time
+                
             
                 error_log( 'Scheduling at: ' . date( 'Y-m-d H:i:s', $timestamp ) ); // Debug
                 wp_schedule_event( $timestamp, 'daily', 'smtp_test_daily_cron2' );
