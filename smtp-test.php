@@ -15,18 +15,23 @@ class SMTP_Test_Plugin {
         add_action( 'admin_init', [ $this, 'register_settings' ] );
         add_action( 'admin_init', [ $this, 'maybe_send_manual_test_email' ] );
 
+        wp_clear_scheduled_hook( 'smtp_test_daily_check' );
+        wp_clear_scheduled_hook( 'smtp_test_daily_cron' );
+
+        add_action( 'admin_post_smtp_test_reset', [ $this, 'reset_plugin_data' ] );
+
         if ( get_option( 'smtp_test_site_type' ) === 'child' ) {
             add_action( 'smtp_test_daily_cron', [ $this, 'maybe_send_weekly_email' ] );
 
             // Schedule daily check at 00:01 if not already scheduled
-            if ( ! wp_next_scheduled( 'smtp_test_daily_cron' ) ) {
-                $now = current_time( 'timestamp' ); // WP timezone
+            if ( ! wp_next_scheduled( 'smtp_test_daily_cron2' ) ) {
+                $now = current_time( 'timestamp' );
                 $tomorrow = strtotime( 'tomorrow', $now );
             
-                // 12:01 AM tomorrow
                 $timestamp = mktime( 0, 1, 0, date( 'n', $tomorrow ), date( 'j', $tomorrow ), date( 'Y', $tomorrow ) );
             
-                wp_schedule_event( $timestamp, 'daily', 'smtp_test_daily_cron' );
+                error_log( 'Scheduling at: ' . date( 'Y-m-d H:i:s', $timestamp ) ); // Debug
+                wp_schedule_event( $timestamp, 'daily', 'smtp_test_daily_cron2' );
             }
         }
 
@@ -34,6 +39,38 @@ class SMTP_Test_Plugin {
             add_shortcode( 'check_email_token', [ $this, 'check_email_token' ] );
         }
     }
+
+    public function reset_plugin_data() {
+        // Security check
+        if (
+            ! current_user_can( 'manage_options' ) ||
+            ! isset( $_POST['smtp_test_reset_nonce'] ) ||
+            ! wp_verify_nonce( $_POST['smtp_test_reset_nonce'], 'smtp_test_reset_action' )
+        ) {
+            wp_die( 'Unauthorized request' );
+        }
+    
+        // Clear crons
+        wp_clear_scheduled_hook( 'smtp_test_daily_check' );
+        wp_clear_scheduled_hook( 'smtp_test_daily_cron' );
+        wp_clear_scheduled_hook( 'smtp_test_daily_cron2' );
+    
+        // Delete options
+        delete_option( 'smtp_test_site_type' );
+        delete_option( 'smtp_test_email_to' );
+        delete_option( 'smtp_test_day' );
+        delete_option( 'smtp_test_app_password' );
+        delete_option( 'smtp_test_child_sites' );
+    
+        // Optional: Delete transients from previous email runs
+        global $wpdb;
+        $wpdb->query( "DELETE FROM $wpdb->options WHERE option_name LIKE '_transient_smtp_test_email_sent_%'" );
+    
+        // Redirect with success message
+        wp_redirect( admin_url( 'options-general.php?page=smtp-test&reset=1' ) );
+        exit;
+    }
+    
 
     public function register_settings_page() {
         add_options_page( 'SMTP Test Settings', 'SMTP Test', 'manage_options', 'smtp-test', [ $this, 'settings_page' ] );
@@ -153,6 +190,22 @@ class SMTP_Test_Plugin {
 
                 <?php submit_button(); ?>
             </form>
+
+            <?php if ( current_user_can( 'manage_options' ) ) : ?>
+                <hr>
+                <h2>Reset Plugin</h2>
+                <?php if ( isset( $_GET['reset'] ) && $_GET['reset'] == 1 ) : ?>
+                    <div class="notice notice-success is-dismissible">
+                        <p>✅ Plugin settings and scheduled tasks have been reset.</p>
+                    </div>
+                <?php endif; ?>
+                <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+                    <?php wp_nonce_field( 'smtp_test_reset_action', 'smtp_test_reset_nonce' ); ?>
+                    <input type="hidden" name="action" value="smtp_test_reset">
+                    <?php submit_button( 'Reset Plugin', 'delete', 'submit', false ); ?>
+                </form>
+            <?php endif; ?>
+
         </div>
         <?php
     }
