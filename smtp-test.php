@@ -15,23 +15,20 @@ class SMTP_Test_Plugin {
         add_action( 'admin_init', [ $this, 'register_settings' ] );
         add_action( 'admin_init', [ $this, 'maybe_send_manual_test_email' ] );
 
-        wp_clear_scheduled_hook( 'smtp_test_daily_check' );
-        wp_clear_scheduled_hook( 'smtp_test_daily_cron' );
 
         add_action( 'admin_post_smtp_test_reset', [ $this, 'reset_plugin_data' ] );
 
         if ( get_option( 'smtp_test_site_type' ) === 'child' ) {
-            add_action( 'smtp_test_daily_cron2', [ $this, 'maybe_send_weekly_email' ] );
+            add_action( 'smtp_test_daily_check', [ $this, 'maybe_send_weekly_email' ] );
 
             // Schedule daily check at 00:01 if not already scheduled
-            if ( ! wp_next_scheduled( 'smtp_test_daily_cron2' ) ) {
+            if ( ! wp_next_scheduled( 'smtp_test_daily_check' ) ) {
                 $timezone = wp_timezone(); // WordPress timezone (DateTimeZone object)
                 $datetime = new DateTime( 'tomorrow 00:03:00', $timezone );
                 $timestamp = $datetime->getTimestamp(); // This is in local time
                 
-            
-                error_log( 'Scheduling at: ' . date( 'Y-m-d H:i:s', $timestamp ) ); // Debug
-                wp_schedule_event( $timestamp, 'daily', 'smtp_test_daily_cron2' );
+        
+                wp_schedule_event( $timestamp, 'daily', 'smtp_test_daily_check' );
             }
         }
 
@@ -52,8 +49,7 @@ class SMTP_Test_Plugin {
     
         // Clear crons
         wp_clear_scheduled_hook( 'smtp_test_daily_check' );
-        wp_clear_scheduled_hook( 'smtp_test_daily_cron' );
-        wp_clear_scheduled_hook( 'smtp_test_daily_cron2' );
+        
     
         // Delete options
         delete_option( 'smtp_test_site_type' );
