@@ -39,9 +39,24 @@ class SMTP_Test_Plugin {
 
         if ( get_option( 'smtp_test_site_type' ) === 'parent' ) {
             add_shortcode( 'check_email_token', [ $this, 'check_email_token' ] );
+            add_action( 'wp_dashboard_setup', [ $this, 'add_dashboard_widget' ] );
         }
         
+        
     }
+
+    public function add_dashboard_widget() {
+        wp_add_dashboard_widget(
+            'smtp_test_widget',
+            'SMTP Test Results',
+            [ $this, 'render_dashboard_widget' ]
+        );
+    }
+
+    public function render_dashboard_widget() {
+        echo $this->check_email_token();
+    }
+    
 
     public function reset_plugin_data() {
         // Security check
