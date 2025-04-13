@@ -2,14 +2,14 @@
 /**
  * Plugin Name: SMTP Test
  * Description: Sends weekly test emails from child sites to a parent site and verifies delivery.
- * Version: 1.2.3
+ * Version: 1.2.4
  * Author: James Welbes
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 // Define plugin constants.
-define('SMTP_TEST_VERSION', '1.2.3');
+define('SMTP_TEST_VERSION', '1.2.4');
 define('SMTP_TEST_PATH', plugin_dir_path(__FILE__));
 define('SMTP_TEST_URL', plugin_dir_url(__FILE__));
 define('SMTP_TEST_MIN_WP_VERSION', '5.8');
@@ -150,15 +150,12 @@ class SMTP_Test_Plugin {
                             </select>
                         </td>
                     </tr>
+                    <?php if ( $site_type === 'parent' || $site_type === 'child' ) : ?>
                     <tr valign="top">
-                        <?php if ( $site_type === 'child' ) : ?>
-                        <th scope="row">Send Test Emails To</th>
-                        <?php endif; ?>
-                        <?php if ( $site_type === 'parent' ) : ?>
-                        <th scope="row">Email inbox to check</th>
-                        <?php endif; ?>
+                        <th scope="row">Test Email inbox</th>
                         <td><input type="email" name="smtp_test_email_to" value="<?php echo esc_attr( get_option('smtp_test_email_to') ); ?>" /></td>
                     </tr>
+                    <?php endif; ?>
                     <?php if ( $site_type === 'child' ) : ?>
                     <tr valign="top">
                         <th scope="row">Test Day</th>
@@ -205,10 +202,12 @@ class SMTP_Test_Plugin {
                         </tr>
                     <?php endif; ?>
                     
+                    <?php if ( $site_type === 'parent' || $site_type === 'child' ) : ?>
                     <tr valign="top">
                         <th scope="row">Cron Note</th>
                         <td><p>⏱️ WordPress cron only runs when someone visits your site. For low-traffic sites, the test email may be delayed until a visit triggers the cron.</p></td>
                     </tr>
+                    <?php endif; ?>
                 </table>
 
                 <?php submit_button(); ?>
