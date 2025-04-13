@@ -33,7 +33,7 @@ function my_plugin_check_for_updates($transient) {
     $download_url = $release['assets'][0]['browser_download_url'];
 
     // Get the current version of the installed plugin
-    $plugin_slug = 'SMTP-Test/smtp-test.php';
+    $plugin_slug = 'smtp-test/smtp-test.php';
     $current_version = $transient->checked[$plugin_slug] ?? null;
     error_log('Current version: ' . ($current_version ?? 'unknown'));
 
