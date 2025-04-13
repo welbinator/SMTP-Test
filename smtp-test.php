@@ -2,14 +2,14 @@
 /**
  * Plugin Name: SMTP Test
  * Description: Sends weekly test emails from child sites to a parent site and verifies delivery.
- * Version: 1.2.4
+ * Version: 1.2.5
  * Author: James Welbes
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 // Define plugin constants.
-define('SMTP_TEST_VERSION', '1.2.4');
+define('SMTP_TEST_VERSION', '1.2.5');
 define('SMTP_TEST_PATH', plugin_dir_path(__FILE__));
 define('SMTP_TEST_URL', plugin_dir_url(__FILE__));
 define('SMTP_TEST_MIN_WP_VERSION', '5.8');
