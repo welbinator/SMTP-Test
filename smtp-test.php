@@ -2,14 +2,14 @@
 /**
  * Plugin Name: SMTP Test
  * Description: Sends weekly test emails from child sites to a parent site and verifies delivery.
- * Version: 1.2.2
+ * Version: 1.2.3
  * Author: James Welbes
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 // Define plugin constants.
-define('SMTP_TEST_VERSION', '1.2.2');
+define('SMTP_TEST_VERSION', '1.2.3');
 define('SMTP_TEST_PATH', plugin_dir_path(__FILE__));
 define('SMTP_TEST_URL', plugin_dir_url(__FILE__));
 define('SMTP_TEST_MIN_WP_VERSION', '5.8');
@@ -39,9 +39,24 @@ class SMTP_Test_Plugin {
 
         if ( get_option( 'smtp_test_site_type' ) === 'parent' ) {
             add_shortcode( 'check_email_token', [ $this, 'check_email_token' ] );
+            add_action( 'wp_dashboard_setup', [ $this, 'add_dashboard_widget' ] );
         }
         
+        
     }
+
+    public function add_dashboard_widget() {
+        wp_add_dashboard_widget(
+            'smtp_test_widget',
+            'SMTP Test Results',
+            [ $this, 'render_dashboard_widget' ]
+        );
+    }
+
+    public function render_dashboard_widget() {
+        echo $this->check_email_token();
+    }
+    
 
     public function reset_plugin_data() {
         // Security check
@@ -136,9 +151,15 @@ class SMTP_Test_Plugin {
                         </td>
                     </tr>
                     <tr valign="top">
+                        <?php if ( $site_type === 'child' ) : ?>
                         <th scope="row">Send Test Emails To</th>
+                        <?php endif; ?>
+                        <?php if ( $site_type === 'parent' ) : ?>
+                        <th scope="row">Email inbox to check</th>
+                        <?php endif; ?>
                         <td><input type="email" name="smtp_test_email_to" value="<?php echo esc_attr( get_option('smtp_test_email_to') ); ?>" /></td>
                     </tr>
+                    <?php if ( $site_type === 'child' ) : ?>
                     <tr valign="top">
                         <th scope="row">Test Day</th>
                         <td>
@@ -150,7 +171,7 @@ class SMTP_Test_Plugin {
                             <p class="description">Test emails are only sent if today matches the selected day.</p>
                         </td>
                     </tr>
-
+                    <?php endif; ?>
                     <?php if ( $site_type === 'parent' ) : ?>
                         <tr valign="top">
                             <th scope="row">Gmail App Password</th>
