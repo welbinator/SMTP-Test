@@ -151,9 +151,15 @@ class SMTP_Test_Plugin {
                         </td>
                     </tr>
                     <tr valign="top">
+                        <?php if ( $site_type === 'child' ) : ?>
                         <th scope="row">Send Test Emails To</th>
+                        <?php endif; ?>
+                        <?php if ( $site_type === 'parent' ) : ?>
+                        <th scope="row">Email inbox to check</th>
+                        <?php endif; ?>
                         <td><input type="email" name="smtp_test_email_to" value="<?php echo esc_attr( get_option('smtp_test_email_to') ); ?>" /></td>
                     </tr>
+                    <?php if ( $site_type === 'child' ) : ?>
                     <tr valign="top">
                         <th scope="row">Test Day</th>
                         <td>
@@ -165,7 +171,7 @@ class SMTP_Test_Plugin {
                             <p class="description">Test emails are only sent if today matches the selected day.</p>
                         </td>
                     </tr>
-
+                    <?php endif; ?>
                     <?php if ( $site_type === 'parent' ) : ?>
                         <tr valign="top">
                             <th scope="row">Gmail App Password</th>
