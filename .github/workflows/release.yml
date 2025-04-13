@@ -23,7 +23,7 @@ jobs:
       - name: Copy necessary files to the temporary directory
         run: |
           cp smtp-test.php temp_dir/
-          
+          cp github-update.php temp_dir/
 
       # Rename directory to the desired folder name
       - name: Rename directory
