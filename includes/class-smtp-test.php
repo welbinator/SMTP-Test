@@ -13,7 +13,7 @@ class SMTP_Test_Plugin {
 
             if ( ! wp_next_scheduled( 'smtp_test_daily_check' ) ) {
                 $timezone = wp_timezone();
-                $datetime = new DateTime( 'tomorrow 00:03:00', $timezone );
+                $datetime = new DateTime( '00:03:00', $timezone );
                 $timestamp = $datetime->getTimestamp();
                 wp_schedule_event( $timestamp, 'daily', 'smtp_test_daily_check' );
             }
