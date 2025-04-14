@@ -74,16 +74,27 @@ class SMTP_Test_Plugin {
     }
 
     public function maybe_send_weekly_email() {
+        // error_log("let's maybe send an email!");
         if ( ! defined( 'DOING_CRON' ) || ! DOING_CRON ) return;
 
         $today = current_time( 'l' );
         $target_day = get_option( 'smtp_test_day', 'Friday' );
 
+        // if ( $today !== $target_day ) {
+        //     error_log("[SMTP Test] Today is not your day: Today is $today, target is $target_day.");
+        //     return;
+        // }
+
+        // error_log("[SMTP Test] Today's the day! Sending test email...");
+
         if ( $today !== $target_day ) return;
 
         $transient_key = 'smtp_test_email_sent_' . date( 'Y-m-d' );
 
-        if ( get_transient( $transient_key ) ) return;
+        if ( get_transient( $transient_key ) ) {
+            // error_log("[SMTP Test] Email already sent today. Skipping.");
+            return;
+        }
 
         smtp_test_send_email();
         set_transient( $transient_key, true, DAY_IN_SECONDS );

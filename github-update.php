@@ -3,7 +3,7 @@
 namespace SMTPTest\GitHubUpdater;
 
 function my_plugin_check_for_updates($transient) {
-    error_log("check for updates called");
+    // error_log("check for updates called");
 
     $owner = 'welbinator';
     $repo = 'SMTP-Test';
@@ -35,12 +35,12 @@ function my_plugin_check_for_updates($transient) {
     // Get the current version of the installed plugin
     $plugin_slug = 'smtp-test/smtp-test.php';
     $current_version = $transient->checked[$plugin_slug] ?? null;
-    error_log('Current version: ' . ($current_version ?? 'unknown'));
+    // error_log('Current version: ' . ($current_version ?? 'unknown'));
 
 
     // Skip adding update if current version equals latest version
     if ($current_version && version_compare($latest_version, $current_version, '<=')) {
-        error_log("Current version ($current_version) is up to date.");
+        // error_log("Current version ($current_version) is up to date.");
         return $transient;
     }
 
@@ -55,7 +55,7 @@ function my_plugin_check_for_updates($transient) {
         'requires'    => SMTP_TEST_MIN_WP_VERSION,
     ];
 
-    error_log("Update available: $latest_version");
+    // error_log("Update available: $latest_version");
     return $transient;
 }
 add_filter('pre_set_site_transient_update_plugins', __NAMESPACE__ . '\\my_plugin_check_for_updates');
