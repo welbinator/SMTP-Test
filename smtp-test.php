@@ -235,7 +235,7 @@ class SMTP_Test_Plugin {
     public function maybe_send_manual_test_email() {
         if (
             isset( $_POST['smtp_test_send_manual'] ) &&
-            check_admin_referer( 'smtp_test_settings-options' )
+            check_admin_referer( 'smtp_test_settings' )
         ) {
             $this->send_test_email();
             exit;
