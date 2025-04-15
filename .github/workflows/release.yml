@@ -19,11 +19,18 @@ jobs:
       - name: Create temporary directory
         run: mkdir temp_dir
 
-      # Copy specified files to the temporary directory
-      - name: Copy necessary files to the temporary directory
+      # Copy all project files to the temp_dir, excluding specific files/folders
+      - name: Copy all files except excluded ones
         run: |
-          cp smtp-test.php temp_dir/
-          cp github-update.php temp_dir/
+          rsync -av --progress ./ temp_dir/ \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude 'node_modules' \
+            --exclude '.DS_Store' \
+            --exclude '*.log' \
+            --exclude '.gitignore' \
+            --exclude 'README.md' \
+            --exclude '.env'
 
       # Rename directory to the desired folder name
       - name: Rename directory
