@@ -7,6 +7,12 @@ function smtp_test_render_settings_page() {
     <div class="wrap">
         <h1>SMTP Test Settings</h1>
 
+        <?php if ( isset($_GET['settings-updated']) && $_GET['settings-updated'] === 'true' ) : ?>
+            <div class="notice notice-success is-dismissible">
+                <p>✅ Settings saved successfully!</p>
+            </div>
+        <?php endif; ?>
+
         <?php if ( isset($_GET['email_sent']) && $_GET['email_sent'] === '1' ) : ?>
             <div class="notice notice-success is-dismissible">
                 <p>✅ Test email sent successfully!</p>
