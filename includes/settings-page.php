@@ -68,7 +68,7 @@ function smtp_test_render_settings_page() {
                     <tr valign="top">
                         <th scope="row">Child Site Tokens</th>
                         <td>
-                            <textarea name="smtp_test_child_sites" rows="5" cols="40" placeholder="One token per line (e.g. roadmapwp, west-side-sewing)"><?php echo esc_textarea( get_option('smtp_test_child_sites') ); ?></textarea>
+                            <textarea name="smtp_test_child_sites" rows="5" cols="40" placeholder="One token per line"><?php echo esc_textarea( get_option('smtp_test_child_sites') ); ?></textarea>
                             <p class="description">Enter one token per line. Tokens should match the slugified site name from the child site.</p>
                         </td>
                     </tr>
