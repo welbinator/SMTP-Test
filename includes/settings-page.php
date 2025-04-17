@@ -13,16 +13,6 @@ function smtp_test_render_settings_page() {
             </div>
         <?php endif; ?>
 
-        <?php if ( isset($_GET['email_sent']) && $_GET['email_sent'] === '1' ) : ?>
-            <div class="notice notice-success is-dismissible">
-                <p>✅ Test email sent successfully!</p>
-            </div>
-        <?php elseif ( isset($_GET['email_sent']) && $_GET['email_sent'] === '0' ) : ?>
-            <div class="notice notice-error is-dismissible">
-                <p>❌ Failed to send test email.</p>
-            </div>
-        <?php endif; ?>
-
         <form method="post" action="options.php">
             <?php settings_fields( 'smtp_test_settings' ); ?>
             <?php do_settings_sections( 'smtp_test_settings' ); ?>

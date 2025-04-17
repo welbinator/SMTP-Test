@@ -46,7 +46,7 @@ function smtp_test_send_email() {
 
     if ( defined( 'DOING_CRON' ) && DOING_CRON ) return;
 
-    wp_redirect( admin_url( 'admin.php?page=smtp-test&email_sent=' . ($sent ? '1' : '0') ) );
+    wp_redirect( admin_url( 'admin.php?page=smtp-test-tools&email_sent=' . ( $sent ? '1' : '0' ) ) );
     exit;
 }
 
