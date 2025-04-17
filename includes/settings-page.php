@@ -43,6 +43,13 @@ function smtp_test_render_settings_page() {
                         <p class="description">Test emails are only sent if today matches the selected day.</p>
                     </td>
                 </tr>
+                <tr valign="top">
+                    <th scope="row">Site Token</th>
+                    <td>
+                        <code style="user-select: all;"><?php echo esc_html( $site_name ); ?></code>
+                        <p class="description">Copy this token to the parent site in the "Child Site Tokens" field in settings.</p>
+                    </td>
+                </tr>
                 <?php endif; ?>
                 <?php if ( $site_type === 'parent' ) : ?>
                     <tr valign="top">
