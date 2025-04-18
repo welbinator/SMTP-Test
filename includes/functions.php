@@ -2,24 +2,17 @@
 function smtp_test_encrypt_password( $password ) {
     $password = trim( $password );
 
-    // If field is empty, return current saved value to preserve it
     if ( empty( $password ) ) {
-        // error_log('[SMTP Test] Password field was empty — keeping saved password.');
         return get_option( 'smtp_test_app_password' );
     }
 
-    // If it looks already encrypted (base64, long, and decryptable), don't re-encrypt
     $maybe_decrypted = smtp_test_decrypt_password( $password );
     if ( $maybe_decrypted === false ) {
-        // error_log('[SMTP Test] Encrypting fresh password input.');
         $key = AUTH_KEY;
         $iv  = substr( hash( 'sha256', $key ), 0, 16 );
         $encrypted = openssl_encrypt( $password, 'aes-256-cbc', $key, 0, $iv );
-        $encoded = base64_encode( $encrypted );
-        // error_log('[SMTP Test] Encrypted and base64 password: ' . $encoded);
-        return $encoded;
+        return base64_encode( $encrypted );
     } else {
-        // error_log('[SMTP Test] Submitted password appears already encrypted — skipping.');
         return $password;
     }
 }
@@ -27,14 +20,18 @@ function smtp_test_encrypt_password( $password ) {
 function smtp_test_decrypt_password( $encrypted ) {
     $key = AUTH_KEY;
     $iv  = substr( hash( 'sha256', $key ), 0, 16 );
-    $decrypted = openssl_decrypt( base64_decode( $encrypted ), 'aes-256-cbc', $key, 0, $iv );
-    return $decrypted;
+    return openssl_decrypt( base64_decode( $encrypted ), 'aes-256-cbc', $key, 0, $iv );
 }
 
-
 function smtp_test_send_email() {
+    // ✅ Force PHP timezone to match WordPress timezone
+    $timezone_string = get_option( 'timezone_string' );
+    if ( $timezone_string ) {
+        date_default_timezone_set( $timezone_string );
+    }
+
     $site_name = sanitize_title( get_bloginfo( 'name' ) );
-    $date = strtolower( date( 'F-j' ) );
+    $date = strtolower( date( 'F-j' ) ); // wp_date could still give UTC in CRON
     $token = $site_name . '-' . $date;
 
     $to = get_option( 'smtp_test_email_to' );
@@ -51,16 +48,19 @@ function smtp_test_send_email() {
 }
 
 function smtp_test_check_email_token() {
+    // ✅ Force PHP timezone to match WordPress timezone
+    $timezone_string = get_option( 'timezone_string' );
+    if ( $timezone_string ) {
+        date_default_timezone_set( $timezone_string );
+    }
+
     $mailbox = '{imap.gmail.com:993/imap/ssl}INBOX';
     $username = sanitize_email( get_option( 'smtp_test_email_to' ) );
     $password = smtp_test_decrypt_password( get_option( 'smtp_test_app_password' ) );
-    // error_log('[SMTP Test] Password used in IMAP login: ' . $password);
 
-
-        if ( empty( $password ) ) {
-            return '<p style="color:red;">❌ IMAP connection failed: No valid password available.</p>';
-        }
-
+    if ( empty( $password ) ) {
+        return '<p style="color:red;">❌ IMAP connection failed: No valid password available.</p>';
+    }
 
     $child_sites_raw = get_option( 'smtp_test_child_sites' );
     $child_sites = array_filter( array_map( 'trim', explode( "\n", $child_sites_raw ) ) );
@@ -98,7 +98,9 @@ function smtp_test_check_email_token() {
             }
         }
 
-        $output .= '<li>' . esc_html( $token_base ) . ': ' . ( $found ? '<span style="color:green;">✅ Found</span>' : '<span style="color:red;">❌ Not Found</span>' ) . '</li>';
+        $output .= '<li>' .
+                   esc_html( $token_base ) . ': ' .
+                   ( $found ? '<span style="color:green;">✅ Found</span>' : '<span style="color:red;">❌ Not Found</span>' ) . '</li>';
     }
 
     $output .= '</ul>';
