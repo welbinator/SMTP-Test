@@ -39,7 +39,7 @@ function smtp_test_render_tools_page() {
                     <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
                         <?php wp_nonce_field( 'smtp_test_reset_action', 'smtp_test_reset_nonce' ); ?>
                         <input type="hidden" name="action" value="smtp_test_reset">
-                        <?php submit_button( 'Reset Plugin', 'delete', 'submit', false ); ?>
+                        <?php submit_button( 'Reset Plugin', 'delete', 'smtp_test_reset', false ); ?>
                     </form>
                 </td>
             </tr>

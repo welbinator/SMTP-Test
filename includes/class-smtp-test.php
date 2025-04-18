@@ -35,9 +35,7 @@ class SMTP_Test_Plugin {
         }
     
         $sent = smtp_test_send_email();
-    
-        // Correct redirect:
-        wp_redirect( admin_url( 'admin.php?page=smtp-test-tools&email_sent=' . ( $sent ? '1' : '0' ) ) );
+        
         exit;
     }
     
