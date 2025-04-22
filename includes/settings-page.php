@@ -44,6 +44,23 @@ function smtp_test_render_settings_page() {
                     </td>
                 </tr>
                 <tr valign="top">
+                    <th scope="row">Timezone</th>
+                    <td>
+                        <select name="smtp_test_child_timezone">
+                            <?php
+                            $saved_timezone = get_option('smtp_test_child_timezone');
+                            foreach ( timezone_identifiers_list() as $timezone ) :
+                                ?>
+                                <option value="<?php echo esc_attr( $timezone ); ?>" <?php selected( $saved_timezone, $timezone ); ?>>
+                                    <?php echo esc_html( $timezone ); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <p class="description">Select the timezone used to schedule test emails and generate tokens.</p>
+                    </td>
+                </tr>
+
+                <tr valign="top">
                     <th scope="row">Site Token</th>
                     <td>
                         <code style="user-select: all;"><?php echo esc_html( $site_name ); ?></code>

@@ -88,15 +88,24 @@ function smtp_test_check_email_token() {
     $output = '<h2>📬 Token Check Results</h2><ul>';
 
     foreach ( $child_sites as $token_base ) {
-        $expected_token = $token_base . '-' . strtolower( date( 'F-j' ) );
+        $dates_to_check = [
+            strtolower( date( 'F-j' ) ),                          // today
+            strtolower( date( 'F-j', strtotime( '+1 day' ) ) ),   // tomorrow
+        ];
+        
         $found = false;
-
-        foreach ( $all_messages as $content ) {
-            if ( stripos( $content, $expected_token ) !== false ) {
-                $found = true;
-                break;
+        
+        foreach ( $dates_to_check as $date_part ) {
+            $expected_token = $token_base . '-' . $date_part;
+        
+            foreach ( $all_messages as $content ) {
+                if ( stripos( $content, $expected_token ) !== false ) {
+                    $found = true;
+                    break 2; // exit both loops
+                }
             }
         }
+        
 
         $output .= '<li>' .
                    esc_html( $token_base ) . ': ' .
