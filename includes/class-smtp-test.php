@@ -6,6 +6,7 @@ class SMTP_Test_Plugin {
         add_action( 'admin_init', [ $this, 'register_settings' ] );
         add_action( 'admin_post_smtp_test_reset', [ $this, 'reset_plugin_data' ] );
         add_action( 'admin_post_smtp_test_manual_send', [ $this, 'handle_manual_send' ] );
+        add_action( 'wp_ajax_smtp_test_get_results', [ $this, 'handle_ajax_results' ] );
 
 
         if ( get_option( 'smtp_test_site_type' ) === 'child' ) {
@@ -98,10 +99,32 @@ class SMTP_Test_Plugin {
     
 
     public function add_dashboard_widget() {
-        wp_add_dashboard_widget( 'smtp_test_widget', 'SMTP Test Results', function() {
-            echo do_shortcode('[check_email_token]');
-        });
+    wp_add_dashboard_widget( 'smtp_test_widget', 'SMTP Test Results', [ $this, 'render_dashboard_widget' ] );
     }
+
+    public function render_dashboard_widget() {
+        ?>
+        <div id="smtp-test-widget-results">🔄 Loading results...</div>
+        <script>
+            (function($){
+                $.post(ajaxurl, { action: 'smtp_test_get_results' }, function(response){
+                    $('#smtp-test-widget-results').html(response);
+                });
+            })(jQuery);
+        </script>
+        <?php
+    }
+
+    public function handle_ajax_results() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( 'Unauthorized' );
+        }
+
+        echo smtp_test_check_email_token();
+        wp_die(); // required to terminate properly
+    }
+
+
 
     public function check_email_token() {
         return smtp_test_check_email_token();
