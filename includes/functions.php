@@ -70,7 +70,7 @@ function smtp_test_check_email_token() {
         return '<p style="color:red;">❌ IMAP connection failed: ' . imap_last_error() . '</p>';
     }
 
-    $emails = imap_search( $inbox, 'SINCE "' . date( 'd-M-Y', strtotime('-7 days') ) . '"' );
+    $emails = imap_search( $inbox, 'SINCE "' . date( 'd-M-Y', strtotime('-30 days') ) . '"' );
     $all_messages = [];
 
     if ( $emails ) {
@@ -79,40 +79,39 @@ function smtp_test_check_email_token() {
             $overview = imap_fetch_overview( $inbox, $email_number, 0 );
             $subject = isset( $overview[0]->subject ) ? $overview[0]->subject : '';
             $body = imap_fetchbody( $inbox, $email_number, 1 );
-            $all_messages[] = $subject . ' ' . $body;
+            $date = isset( $overview[0]->date ) ? $overview[0]->date : '';
+            $timestamp = strtotime( $date );
+            $all_messages[] = [
+                'content' => strtolower( $subject . ' ' . $body ),
+                'timestamp' => $timestamp,
+            ];
         }
     }
 
     imap_close( $inbox );
 
-    $output = '<h2>📬 Token Check Results</h2><ul>';
+    $output = '<h2>📬 Test Email Results</h2><ul>';
 
     foreach ( $child_sites as $token_base ) {
-        $dates_to_check = [
-            strtolower( date( 'F-j' ) ),                          // today
-            strtolower( date( 'F-j', strtotime( '+1 day' ) ) ),   // tomorrow
-        ];
-        
-        $found = false;
-        
-        foreach ( $dates_to_check as $date_part ) {
-            $expected_token = $token_base . '-' . $date_part;
-        
-            foreach ( $all_messages as $content ) {
-                if ( stripos( $content, $expected_token ) !== false ) {
-                    $found = true;
-                    break 2; // exit both loops
+        $latest_match = null;
+
+        foreach ( $all_messages as $message ) {
+            if ( strpos( $message['content'], $token_base . '-' ) !== false ) {
+                if ( ! $latest_match || $message['timestamp'] > $latest_match['timestamp'] ) {
+                    $latest_match = $message;
                 }
             }
         }
-        
 
-        $output .= '<li>' .
-                   esc_html( $token_base ) . ': ' .
-                   ( $found ? '<span style="color:green;">✅ Found</span>' : '<span style="color:red;">❌ Not Found</span>' ) . '</li>';
+        if ( $latest_match ) {
+            $formatted_date = date( 'F j', $latest_match['timestamp'] );
+            $output .= '<li>' . esc_html( $token_base ) . ': <span style="color:green;">✅ Last Successful Test: ' . esc_html( $formatted_date ) . '</span></li>';
+        } else {
+            $output .= '<li>' . esc_html( $token_base ) . ': <span style="color:red;">❌ No test found</span></li>';
+        }
     }
 
     $output .= '</ul>';
-
     return $output;
 }
+
