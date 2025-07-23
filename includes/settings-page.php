@@ -86,6 +86,14 @@ function smtp_test_render_settings_page() {
                             <p class="description">Enter one token per line. Tokens should match the slugified site name from the child site.</p>
                         </td>
                     </tr>
+                    <tr valign="top">
+                        <th scope="row">Email Lookback Range</th>
+                        <td>
+                            <input type="number" name="smtp_test_lookback_days" value="<?php echo esc_attr( get_option( 'smtp_test_lookback_days', 14 ) ); ?>" min="1" max="365" />
+                            <p class="description">How many days back to look when checking the inbox for test emails. Default is 14.</p>
+                        </td>
+                    </tr>
+
                 <?php endif; ?>
             </table>
             <?php submit_button(); ?>

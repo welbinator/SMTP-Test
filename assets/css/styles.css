@@ -1,0 +1,9 @@
+.loading-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .loading-gif {
+        width: 20px;
+    }
+}

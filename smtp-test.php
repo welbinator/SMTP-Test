@@ -28,4 +28,14 @@ add_action( 'plugins_loaded', function() {
     if ( file_exists( SMTP_TEST_PATH . 'github-update.php' ) ) {
         include_once SMTP_TEST_PATH . 'github-update.php';
     }
+
+    add_action( 'wp_enqueue_scripts', function() {
+    wp_enqueue_style(
+        'smtp-test-styles',
+        SMTP_TEST_URL . 'assets/css/styles.css',
+        [],
+        SMTP_TEST_VERSION
+    );
+});
+
 });
