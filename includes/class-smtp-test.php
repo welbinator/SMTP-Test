@@ -53,6 +53,12 @@ class SMTP_Test_Plugin {
         register_setting( 'smtp_test_settings', 'smtp_test_app_password', [ 'sanitize_callback' => 'smtp_test_encrypt_password' ] );
         register_setting( 'smtp_test_settings', 'smtp_test_child_sites' );
         register_setting( 'smtp_test_settings', 'smtp_test_child_timezone' );
+        register_setting( 'smtp_test_settings', 'smtp_test_lookback_days', [
+            'type' => 'integer',
+            'default' => 14,
+            'sanitize_callback' => 'absint',
+        ] );
+
 
     }
 
@@ -106,11 +112,28 @@ class SMTP_Test_Plugin {
         ?>
         <div id="smtp-test-widget-results">🔄 Loading results...</div>
         <script>
-            (function($){
-                $.post(ajaxurl, { action: 'smtp_test_get_results' }, function(response){
-                    $('#smtp-test-widget-results').html(response);
-                });
-            })(jQuery);
+            document.addEventListener('DOMContentLoaded', function () {
+            const container = document.getElementById('smtp-test-widget-results');
+            const formData = new FormData();
+            formData.append('action', 'smtp_test_get_results');
+
+            fetch(ajaxurl, {
+                method: 'POST',
+                credentials: 'same-origin',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.text();
+            })
+            .then(html => {
+                container.innerHTML = html;
+            })
+            .catch(error => {
+                container.innerHTML = '<p style="color:red;">❌ Failed to load widget results.</p>';
+                console.error('Fetch error:', error);
+            });
+        });
         </script>
         <?php
     }
@@ -124,9 +147,38 @@ class SMTP_Test_Plugin {
         wp_die(); // required to terminate properly
     }
 
-
-
     public function check_email_token() {
-        return smtp_test_check_email_token();
-    }
+    ob_start();
+    ?>
+    <div id="smtp-test-shortcode-results"><div class="loading-wrapper"><img class="loading-gif" src="<?php echo SMTP_TEST_URL; ?>assets/img/loading.gif" alt="Loading..."> Loading test results...</div></div>
+    <script>
+       document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('smtp-test-shortcode-results');
+    const formData = new FormData();
+    formData.append('action', 'smtp_test_get_results');
+
+    fetch('<?php echo admin_url( 'admin-ajax.php' ); ?>', {
+        method: 'POST',
+        credentials: 'same-origin',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok.');
+        }
+        return response.text();
+    })
+    .then(html => {
+        container.innerHTML = html;
+    })
+    .catch(error => {
+        container.innerHTML = '<p style="color:red;">❌ Failed to load results.</p>';
+        console.error('Fetch error:', error);
+    });
+});
+    </script>
+    <?php
+    return ob_get_clean();
+}
+
 }

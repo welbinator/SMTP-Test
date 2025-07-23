@@ -48,6 +48,19 @@ function smtp_test_send_email() {
 }
 
 function smtp_test_check_email_token() {
+     // Avoid running the full IMAP query in the block/page editor
+    if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+        return '<p>📬 SMTP Test Results will display here.</p>';
+    }
+
+    if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+        return '';
+    }
+
+    if ( is_admin() && ! wp_doing_ajax() ) {
+        return '<p>📬 SMTP Test Results will display here.</p>';
+    }
+
     // ✅ Force PHP timezone to match WordPress timezone
     $timezone_string = get_option( 'timezone_string' );
     if ( $timezone_string ) {
@@ -70,7 +83,9 @@ function smtp_test_check_email_token() {
         return '<p style="color:red;">❌ IMAP connection failed: ' . imap_last_error() . '</p>';
     }
 
-    $emails = imap_search( $inbox, 'SINCE "' . date( 'd-M-Y', strtotime('-30 days') ) . '"' );
+    $lookback_days = absint( get_option( 'smtp_test_lookback_days', 14 ) );
+    $emails = imap_search( $inbox, 'SINCE "' . date( 'd-M-Y', strtotime( "-$lookback_days days" ) ) . '"' );
+
     $all_messages = [];
 
     if ( $emails ) {
